@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: user-service-prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Server Configuration
+      - NODE_ENV=production
+      - PORT=3000
+      - API_VERSION=v1
+      # Database Configuration
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=user_service_prod
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - JWT_SECRET=your_jwt_secret_key_here
+      - JWT_EXPIRES_IN=24h
+      - X_API_KEY=your_internal_api_key_here
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=50
+      - AUTH_RATE_LIMIT_WINDOW_MS=900000
+      - AUTH_RATE_LIMIT_MAX_REQUESTS=3
+      - LOG_LEVEL=error
+      - LOG_FILE_PATH=logs/app.log
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "npm run migrate && npm run start"
+    networks:
+      - user-service-network
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: user-service-postgres-prod
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=user_service_prod
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    networks:
+      - user-service-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+networks:
+  user-service-network:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
+    driver: local 

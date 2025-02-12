@@ -1,0 +1,39 @@
+# Production Dockerfile
+FROM node:18-slim as builder
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build TypeScript code
+RUN npm run build
+
+# Production stage
+FROM node:18-slim
+
+# Set working directory
+WORKDIR /usr/src/app
+
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production
+
+# Copy built files from builder stage
+COPY --from=builder /usr/src/app/dist ./dist
+
+# Set environment variables
+ENV NODE_ENV=production
+
+# Expose application port
+EXPOSE 3000
+
+# Start the application
+CMD ["npm", "run", "start:prod"] 
