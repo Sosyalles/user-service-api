@@ -6,25 +6,12 @@ import { authLimiter } from '../middlewares/rateLimiter';
 const router = Router();
 const userController = new UserController();
 
-// Public authentication routes
-router.post(
-  '/register',
-  authLimiter,
-  validate(userSchemas.register),
-  userController.register
-);
+// Apply rate limiting to auth routes
+router.use(authLimiter);
 
-router.post(
-  '/login',
-  authLimiter,
-  validate(userSchemas.login),
-  userController.login
-);
-
-router.post(
-  '/change-password',
-  validate(userSchemas.changePassword),
-  userController.changePassword
-);
+// Auth routes
+router.post('/register', validate(userSchemas.register), userController.register);
+router.post('/login', validate(userSchemas.login), userController.login);
+router.post('/change-password', validate(userSchemas.changePassword), userController.changePassword);
 
 export default router; 

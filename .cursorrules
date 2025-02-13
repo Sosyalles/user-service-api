@@ -1,0 +1,95 @@
+Generate a complete **Node.js** microservice for a **User Management Service** using **TypeScript** and **Sequelize** (with **PostgreSQL**) while adhering to **SOLID** principles (single responsibility). Provide a layered architecture, detailed logging, strict validation, rate limiting, JWT-based user authentication, and X-API-KEY for internal service communication. Separate dev and prod environments, handle robust error management, and include Dockerfiles, Docker Compose, and a README.
+
+dont use transformers npm packet
+### **Key Requirements**
+
+1. **TypeScript & SOLID Layered Architecture**
+   - Use **TypeScript** for type safety.
+   - **Controller**: Handles incoming requests.
+   - **Service**: Contains business logic.
+   - **Repository**: Interacts with the database (Sequelize models).
+   - **Converter Classes**: Transforms entities to DTOs and vice versa.
+   - Each class-function/file should have a **single responsibility**.
+
+2. **Sequelize for Models & Queries**
+   - Define models (e.g., `User`, `Follower`) in a `models/` folder.
+   - Use Sequelize migrations for schema changes.
+   - Implement repository methods that utilize Sequelize queries.
+
+3. **Detailed Logging**
+   - Use a logging library (e.g., `winston`) to log **all critical operations**.
+   - Log incoming/outgoing requests with user IDs, timestamps.
+   - Log exceptions and validation failures.
+
+4. **JWT Authentication (Users)**
+   - Generate JWT tokens on successful login.
+   - Validate tokens in each request using middleware.
+   - Include **rate limiting** for authentication endpoints.
+
+5. **X-API-KEY Authentication (Internal Services)**
+   - For internal microservice calls, use an API key in the request headers.
+   - Validate the API key against environment variables.
+   - Return `403 Forbidden` if the key is invalid.
+
+6. **Detailed Validation & SQL Injection Prevention**
+   - Use libraries like `joi` for user input validation.
+   - Validate ID fields (must be positive, non-zero integers).
+   - Sanitize all inputs to prevent SQL injection.
+
+7. **Rate Limiting**
+   - Implement custom rate limiting for general endpoints.
+   - Use stricter rate limits for authentication endpoints.
+   - Store counters in-memory or in a shared store (if needed for distributed environment).
+
+8. **Integration & Unit Tests**
+   - Use **Jest** for unit tests.
+   - Use **Supertest** for integration tests.
+   - Cover controllers, services, repositories, and validation.
+
+9. **Swagger Documentation**
+   - Provide a **detailed** OpenAPI specification.
+   - Document each endpoint, request, and response model.
+   - Include examples of successful and error responses.
+
+10. **Environment Separation (dev & prod)**
+   - dont use envalid, use dotenv
+   - .env.development
+   - .env.production
+   - .env.test
+   - Use `.env` or config files for dev and prod.
+   - Handle secrets in environment variables.
+   - Provide a **health check** endpoint (e.g., `/health`) verifying DB connection.
+   - seperate docker-compose files for dev and prod
+
+11. **Error Handling & Exceptions**
+   - Create a global error handling middleware.
+   - Create custom error classes thats have individual error functions forexample validation errors, database errors, etc. (e.g., `UserNotFoundError`, `RateLimitError`).
+   - Return meaningful HTTP status codes.
+
+12. **Dockerfile & Docker Compose**
+   - **Dockerfile**: Minimal base image (e.g., `node:18-slim`).
+   - Separate Dockerfiles or Compose configs for **dev** and **prod**.
+   - **dev**: may include debug tools.
+   - **prod**: minimal, optimized.
+   - `docker-compose.yml` for orchestrating **user-service + PostgreSQL**.
+
+13. **README**
+   - Explain setup instructions.
+   - Document environment variables (`JWT_SECRET`, `X_API_KEY`, DB credentials).
+   - Usage examples for Docker Compose.
+   - Testing instructions (unit & integration tests).
+
+### **Expected Output**
+1. A well-structured **Node.js + TypeScript** microservice for user management.
+2. **Sequelize** models and queries, integrated with **PostgreSQL**.
+3. **SOLID** code with a layered architecture.
+4. **Detailed logging** of critical operations.
+5. **JWT** for user auth, **X-API-KEY** for internal calls.
+6. **Strict validation**, rate limiting (especially for auth), and SQL injection prevention.
+7. **Swagger** doc specifying endpoints, models, and security.
+8. **dev** and **prod** Dockerfiles/Compose setups.
+9. **Global error handling** with robust exception definitions.
+10. A **README** with environment variables, build steps, and usage.
+
+Generate project components and code structure based on these guidelines.
+

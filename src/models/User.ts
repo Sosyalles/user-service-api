@@ -12,11 +12,15 @@ export interface UserAttributes {
   lastName: string;
   isActive: boolean;
   lastLoginAt: Date | null;
+  profilePhotos: string[];
+  bio: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export interface UserInstance extends Model<UserAttributes>, UserAttributes {}
+export interface UserInstance extends Model<UserAttributes>, UserAttributes {
+  comparePassword(candidatePassword: string): Promise<boolean>;
+}
 
 const User = sequelize.define<UserInstance>('User', {
   id: {
@@ -63,6 +67,15 @@ const User = sequelize.define<UserInstance>('User', {
   lastLoginAt: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  profilePhotos: {
+    type: DataTypes.ARRAY(DataTypes.STRING),
+    defaultValue: [],
+    allowNull: false
+  },
+  bio: {
+    type: DataTypes.TEXT,
+    allowNull: true
   }
 }, {
   timestamps: true,
@@ -77,9 +90,9 @@ const User = sequelize.define<UserInstance>('User', {
   }
 });
 
-// Static method for password comparison
-export const comparePassword = async (user: UserInstance, candidatePassword: string): Promise<boolean> => {
-  return bcrypt.compare(candidatePassword, user.password);
+// Add instance method
+(User.prototype as UserInstance).comparePassword = async function(candidatePassword: string): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 export default User; 

@@ -3,6 +3,7 @@ import { UserService } from '../services/UserService';
 import logger from '../utils/logger';
 import { ValidationError } from '../errors/AppError';
 import { CreateUserDTO, UpdateUserDTO, ChangePasswordDTO } from '../types/dto/UserDTO';
+import { uploadProfilePhotos } from '../utils/multerConfig';
 
 export class UserController {
   private userService: UserService;
@@ -231,6 +232,97 @@ export class UserController {
       });
     } catch (error) {
       logger.error('Error in getAllUsers controller:', error);
+      next(error);
+    }
+  };
+
+  public updateProfilePhotos = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new ValidationError('User ID is required');
+      }
+
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        throw new ValidationError('No profile photos uploaded');
+      }
+
+      const files = req.files as Express.Multer.File[];
+      const photoUrls = files.map(file => `/uploads/profiles/${file.filename}`);
+
+      const updatedUser = await this.userService.updateProfilePhotos(userId, photoUrls);
+      if (!updatedUser) {
+        throw new Error('Failed to update profile photos');
+      }
+
+      logger.info(`Profile photos updated successfully for user: ${userId}`);
+      res.json({
+        status: 'success',
+        message: 'Profile photos updated successfully',
+        data: {
+          profilePhotos: updatedUser.profilePhotos
+        },
+      });
+    } catch (error) {
+      logger.error('Error in updateProfilePhotos controller:', error);
+      next(error);
+    }
+  };
+
+  public getUserById = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await this.userService.getUser(userId);
+      
+      res.json({
+        status: 'success',
+        data: user
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getUserByUsername = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const { username } = req.params;
+      const user = await this.userService.getUserByUsername(username);
+      
+      res.json({
+        status: 'success',
+        data: user
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getUserByEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const { email } = req.params;
+      const user = await this.userService.getUserByEmail(email);
+      
+      res.json({
+        status: 'success',
+        data: user
+      });
+    } catch (error) {
       next(error);
     }
   };

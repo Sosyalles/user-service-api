@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -24,7 +24,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Copy built files from builder stage
 COPY --from=builder /usr/src/app/dist ./dist
@@ -36,4 +36,4 @@ ENV NODE_ENV=production
 EXPOSE 3000
 
 # Start the application
-CMD ["npm", "run", "start:prod"] 
+CMD ["npm", "start"] 

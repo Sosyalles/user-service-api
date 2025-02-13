@@ -33,4 +33,12 @@ export const initializeDatabase = async (): Promise<void> => {
   }
 };
 
+export const testConnection = async (): Promise<void> => {
+  try {
+    await sequelize.authenticate();
+  } catch (error) {
+    throw new Error('Unable to connect to the database');
+  }
+};
+
 export { DataTypes }; 

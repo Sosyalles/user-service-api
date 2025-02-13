@@ -12,9 +12,11 @@ import {
   ValidationError,
   AuthenticationError,
   ConflictError,
+  NotFoundError,
 } from '../errors/AppError';
 import { config } from '../config/config';
 import logger from '../utils/logger';
+import User, { UserInstance } from '../models/User';
 
 export class UserService {
   private userRepository: UserRepository;
@@ -71,6 +73,10 @@ export class UserService {
 
     if (!user.isActive) {
       throw new AuthenticationError('Account is deactivated');
+    }
+
+    if (!user.id) {
+      throw new ValidationError('User ID is required');
     }
 
     await this.userRepository.updateLastLogin(user.id);
@@ -149,5 +155,40 @@ export class UserService {
       users: userResponses,
       total,
     };
+  }
+
+  public async updateProfilePhotos(userId: number, photoUrls: string[]): Promise<UserInstance | null> {
+    try {
+      const user = await User.findByPk(userId);
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
+
+      user.profilePhotos = photoUrls;
+      await user.save();
+
+      return user;
+    } catch (error) {
+      logger.error('Error updating profile photos:', error);
+      throw error;
+    }
+  }
+
+  public async getUserByUsername(username: string): Promise<UserResponseDTO> {
+    const user = await this.userRepository.findByUsername(username);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+    const { password, ...userResponse } = user.toJSON() as UserResponseDTO & { password: string };
+    return userResponse;
+  }
+
+  public async getUserByEmail(email: string): Promise<UserResponseDTO> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+    const { password, ...userResponse } = user.toJSON() as UserResponseDTO & { password: string };
+    return userResponse;
   }
 } 
