@@ -70,10 +70,4 @@ export class UserRepository {
       total: count,
     };
   }
-
-  public async updateLastLogin(id: number): Promise<void> {
-    const validId = validateId(id);
-    const user = await this.findById(validId);
-    await user.update({ lastLoginAt: new Date() });
-  }
 } 

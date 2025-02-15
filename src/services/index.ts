@@ -1,1 +1,2 @@
-export * from './HealthService'; 
+export * from './HealthService';
+export * from './UserDetailService'; 

@@ -11,9 +11,7 @@ export interface UserAttributes {
   firstName: string;
   lastName: string;
   isActive: boolean;
-  lastLoginAt: Date | null;
-  profilePhotos: string[];
-  bio: string | null;
+  profilePhoto?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -64,17 +62,8 @@ const User = sequelize.define<UserInstance>('User', {
     type: DataTypes.BOOLEAN,
     defaultValue: true
   },
-  lastLoginAt: {
-    type: DataTypes.DATE,
-    allowNull: true
-  },
-  profilePhotos: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
-    defaultValue: [],
-    allowNull: false
-  },
-  bio: {
-    type: DataTypes.TEXT,
+  profilePhoto: {
+    type: DataTypes.STRING,
     allowNull: true
   }
 }, {
@@ -93,6 +82,14 @@ const User = sequelize.define<UserInstance>('User', {
 // Add instance method
 (User.prototype as UserInstance).comparePassword = async function(candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+export const setupUserAssociations = (UserDetail: any): void => {
+  User.hasOne(UserDetail, {
+    sourceKey: 'id',
+    foreignKey: 'userId',
+    as: 'userDetail',
+  });
 };
 
 export default User; 

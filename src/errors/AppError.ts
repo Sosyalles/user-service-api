@@ -2,7 +2,7 @@ export class AppError extends Error {
   public readonly statusCode: number;
   public readonly isOperational: boolean;
 
-  constructor(message: string, statusCode: number, isOperational = true) {
+  constructor(message: string, statusCode: number, isOperational: boolean = true) {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = isOperational;
@@ -24,7 +24,7 @@ export class AuthenticationError extends AppError {
   }
 }
 
-export class AuthorizationError extends AppError {
+export class ForbiddenError extends AppError {
   constructor(message: string) {
     super(message, 403);
   }

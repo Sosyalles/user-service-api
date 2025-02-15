@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { UserRepository } from '../repositories/UserRepository';
+import { UserDetailRepository } from '../repositories/UserDetailRepository';
 import {
   CreateUserDTO,
   UpdateUserDTO,
@@ -17,17 +18,23 @@ import {
 import { config } from '../config/config';
 import logger from '../utils/logger';
 import User, { UserInstance } from '../models/User';
+import UserDetail from '../models/UserDetail';
 
 export class UserService {
   private userRepository: UserRepository;
+  private userDetailRepository: UserDetailRepository;
 
   constructor() {
     this.userRepository = new UserRepository();
+    this.userDetailRepository = new UserDetailRepository();
   }
 
-  private generateToken(userId: number): string {
+  private generateToken(userId: number, username: string): string {
     const token = jwt.sign(
-      { userId } as object,
+      { 
+        userId,
+        username 
+      } as object,
       String(config.jwt.secret),
       { expiresIn: String(config.jwt.expiresIn) }
     );
@@ -79,8 +86,8 @@ export class UserService {
       throw new ValidationError('User ID is required');
     }
 
-    await this.userRepository.updateLastLogin(user.id);
-    const token = this.generateToken(user.id);
+    await this.userDetailRepository.updateLastLogin(user.id);
+    const token = this.generateToken(user.id, user.username);
 
     logger.info(`User logged in: ${user.id}`);
     const { password, ...userResponse } = user.toJSON() as UserResponseDTO & { password: string };
@@ -164,7 +171,7 @@ export class UserService {
         throw new NotFoundError('User not found');
       }
 
-      user.profilePhotos = photoUrls;
+      user.profilePhoto = photoUrls[0];
       await user.save();
 
       return user;
@@ -190,5 +197,53 @@ export class UserService {
     }
     const { password, ...userResponse } = user.toJSON() as UserResponseDTO & { password: string };
     return userResponse;
+  }
+
+  public async getUserProfileWithDetails(userId: number): Promise<any> {
+    try {
+      const user = await User.findOne({
+        where: { id: userId },
+        include: [{
+          model: UserDetail,
+          as: 'userDetail',
+          required: false
+        }],
+        attributes: { exclude: ['password'] }
+      });
+
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      logger.error('Error in getUserProfileWithDetails service:', error);
+      throw error;
+    }
+  }
+
+  public async getUserProfileWithDetailsByUsername(username: string): Promise<any> {
+    try {
+      const user = await User.findOne({
+        where: { username },
+        include: [{
+          model: UserDetail,
+          as: 'userDetail',
+          required: false
+        }],
+        attributes: { 
+          exclude: ['password'] // Güvenlik için password'ü hariç tutuyoruz
+        }
+      });
+
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      logger.error('Error in getUserProfileWithDetailsByUsername service:', error);
+      throw error;
+    }
   }
 } 

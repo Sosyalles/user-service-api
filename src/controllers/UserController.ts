@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserService } from '../services/UserService';
 import logger from '../utils/logger';
-import { ValidationError } from '../errors/AppError';
+import { ValidationError, ForbiddenError } from '../errors/AppError';
 import { CreateUserDTO, UpdateUserDTO, ChangePasswordDTO } from '../types/dto/UserDTO';
 import { uploadProfilePhotos } from '../utils/multerConfig';
 
@@ -264,7 +264,7 @@ export class UserController {
         status: 'success',
         message: 'Profile photos updated successfully',
         data: {
-          profilePhotos: updatedUser.profilePhotos
+          profilePhoto: updatedUser.profilePhoto
         },
       });
     } catch (error) {
@@ -323,6 +323,56 @@ export class UserController {
         data: user
       });
     } catch (error) {
+      next(error);
+    }
+  };
+
+  public getProfileWithDetails = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        throw new ValidationError('User ID is required');
+      }
+
+      const userProfile = await this.userService.getUserProfileWithDetails(userId);
+      
+      logger.info(`User profile with details retrieved successfully for user: ${userId}`);
+      res.json({
+        status: 'success',
+        message: 'User profile with details retrieved successfully',
+        data: userProfile,
+      });
+    } catch (error) {
+      logger.error('Error in getProfileWithDetails controller:', error);
+      next(error);
+    }
+  };
+
+  public getProfileWithDetailsByUsername = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const { username } = req.params;
+      if (!username) {
+        throw new ValidationError('Username is required');
+      }
+
+      const userProfile = await this.userService.getUserProfileWithDetailsByUsername(username);
+      
+      logger.info(`User profile with details retrieved successfully for username: ${username}`);
+      res.json({
+        status: 'success',
+        message: 'User profile with details retrieved successfully',
+        data: userProfile,
+      });
+    } catch (error) {
+      logger.error('Error in getProfileWithDetailsByUsername controller:', error);
       next(error);
     }
   };

@@ -1,79 +1,38 @@
 #!/bin/bash
 
-# Create and checkout dev_eren branch
-git checkout -b dev_eren
+# Create and switch to dev_eren branch
+git checkout -b dev_eren 2>/dev/null || git checkout dev_eren
 
-# Project configuration files
-git add .eslintrc.js .prettierrc tsconfig.json nodemon.json jest.config.js
-git commit -m "chore(config): add TypeScript, ESLint, Prettier, and Jest configurations"
+# Stage and commit auth-related changes
+git add src/middlewares/auth.ts
+git commit -m "feat(auth): add username to JWT token payload and update token verification
+- Add username field to JWT payload structure
+- Update token verification to check for username presence
+- Enhance type definitions for better TypeScript support"
 
-# Package files
-git add package.json package-lock.json
-git commit -m "chore(deps): initialize project dependencies"
+# Stage and commit service-related changes
+git add src/services/UserService.ts
+git commit -m "feat(user-service): update token generation to include username
+- Modify generateToken method to include username in payload
+- Update login flow to pass username to token generation
+- Enhance type safety in token handling"
 
-# Main application files
-git add src/app.ts src/index.ts
-git commit -m "feat(core): implement main application setup and server initialization"
+# Stage and commit swagger changes
+git add swagger.json
+git commit -m "docs(swagger): update API documentation for JWT changes
+- Add username field to JWT token description
+- Update security scheme documentation
+- Enhance response examples for authentication endpoints"
 
-# Config files
-git add src/config/database.ts src/config/config.ts src/config/swagger.ts
-git commit -m "feat(config): implement database configuration and environment setup"
+# Stage and commit any remaining changes
+git add .
+git commit -m "chore: update remaining files and configurations
+- Update type definitions
+- Fix linting issues
+- Update documentation"
 
-# Models
-git add src/models/User.ts
-git commit -m "feat(models): implement User model with Sequelize and TypeScript types"
+# Push all changes to dev_eren branch
+echo "Pushing changes to dev_eren branch..."
+git push origin dev_eren
 
-# DTOs
-git add src/types/dto/*
-git commit -m "feat(dto): add user data transfer objects for type safety"
-
-# Repositories
-git add src/repositories/UserRepository.ts
-git commit -m "feat(repository): implement UserRepository with CRUD operations"
-
-# Services
-git add src/services/*
-git commit -m "feat(service): add user service layer with business logic"
-
-# Controllers
-git add src/controllers/*
-git commit -m "feat(controller): implement REST endpoints for user management"
-
-# Middleware
-git add src/middlewares/*
-git commit -m "feat(middleware): add authentication, validation, and error handling middleware"
-
-# Routes
-git add src/routes/*
-git commit -m "feat(routes): set up API routes with validation and authentication"
-
-# Error handling
-git add src/errors/*
-git commit -m "feat(error): implement custom error classes and handlers"
-
-# Utils
-git add src/utils/*
-git commit -m "feat(utils): add utility functions for validation and logging"
-
-# Tests
-git add src/test/*
-git commit -m "test: add unit and integration tests"
-
-# Docker files
-git add Dockerfile.* docker-compose.*.yml
-git commit -m "feat(docker): add Docker configuration for development and production"
-
-# Environment and config files
-git add .env.* .sequelizerc .cursorrules
-git commit -m "chore(config): add environment configuration files"
-
-# Logs directory
-git add logs/
-git commit -m "chore: add logs directory for application logging"
-
-# Documentation
-git add README.md
-git commit -m "docs: add comprehensive README with setup and usage instructions"
-
-# Push to remote
-git push origin dev_eren 
+echo "Done! All changes have been committed and pushed to dev_eren branch." 

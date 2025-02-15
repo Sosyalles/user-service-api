@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config/config';
-import { AuthenticationError, AuthorizationError } from '../errors/AppError';
+import { AuthenticationError, ForbiddenError } from '../errors/AppError';
 import { UserService } from '../services/UserService';
 import logger from '../utils/logger';
 
 interface JwtPayload {
   userId: number;
+  username: string;
   iat?: number;
   exp?: number;
 }
@@ -16,6 +17,7 @@ declare global {
     interface Request {
       user?: {
         id: number;
+        username: string;
       };
     }
   }
@@ -32,7 +34,7 @@ export const authenticateJWT = async (
     // Check if Authorization header exists
     const authHeader = req.headers.authorization;
     if (!authHeader) {
-      throw new AuthenticationError('Authorization header is missing');
+      throw new AuthenticationError('No authorization header');
     }
 
     // Validate Bearer token format
@@ -43,12 +45,12 @@ export const authenticateJWT = async (
     // Extract and verify token
     const token = authHeader.split(' ')[1];
     if (!token) {
-      throw new AuthenticationError('Token is missing');
+      throw new AuthenticationError('No token provided');
     }
 
     try {
       // Verify and decode token
-      const decoded = jwt.verify(token, config.jwt.secret) as JwtPayload;
+      const decoded = jwt.verify(token, String(config.jwt.secret)) as JwtPayload;
 
       // Validate decoded token structure
       if (!decoded || typeof decoded !== 'object') {
@@ -56,7 +58,7 @@ export const authenticateJWT = async (
       }
 
       // Check for required claims
-      if (!decoded.userId || typeof decoded.userId !== 'number') {
+      if (!decoded.userId || typeof decoded.userId !== 'number' || !decoded.username) {
         throw new AuthenticationError('Invalid token payload');
       }
 
@@ -77,7 +79,10 @@ export const authenticateJWT = async (
       }
 
       // Add user to request object
-      req.user = { id: decoded.userId };
+      req.user = { 
+        id: decoded.userId,
+        username: decoded.username 
+      };
       
       logger.debug(`Authenticated user ID: ${decoded.userId}`);
       next();
@@ -114,7 +119,7 @@ export const authenticateApiKey = (
 
     // Check if API key exists
     if (!apiKey) {
-      throw new AuthorizationError('X-API-KEY header is missing');
+      throw new ForbiddenError('No API key provided');
     }
 
     // Compare with configured API key
@@ -124,7 +129,7 @@ export const authenticateApiKey = (
         path: req.path,
         method: req.method,
       });
-      throw new AuthorizationError('Invalid API key');
+      throw new ForbiddenError('Invalid API key');
     }
 
     logger.debug('API key authentication successful');

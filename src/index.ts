@@ -1,8 +1,10 @@
+import './models/associations';
 import app from './app';
+import { config } from './config/config';
 import logger from './utils/logger';
 import { initializeDatabase } from './config/database';
 
-const PORT = process.env.PORT || 3000;
+const port = config.server.port;
 
 const startServer = async () => {
   try {
@@ -10,8 +12,8 @@ const startServer = async () => {
     await initializeDatabase();
 
     // Start the Express server
-    app.listen(PORT, () => {
-      logger.info(`Server is running on port ${PORT}`);
+    app.listen(port, () => {
+      logger.info(`Server is running on port ${port}`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
