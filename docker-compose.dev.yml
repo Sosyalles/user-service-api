@@ -12,6 +12,7 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+      - ./uploads:/usr/src/app/uploads
     environment:
       - NODE_ENV=development
       - PORT=3000

@@ -35,6 +35,9 @@ export const config = {
     level: process.env.LOG_LEVEL || 'debug',
     filePath: process.env.LOG_FILE_PATH || 'logs/app.log',
   },
+  cors: {
+    origin: process.env.CORS_ORIGIN || '*',
+  },
 } as const;
 
 // Type for the config object

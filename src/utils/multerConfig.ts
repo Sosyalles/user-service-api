@@ -23,7 +23,7 @@ const storage = multer.diskStorage({
 // File filter
 const fileFilter = (req: Request, file: MulterFile, cb: FileFilterCallback) => {
   const allowedMimes = ['image/jpeg', 'image/png', 'image/gif'];
-  
+
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
@@ -41,4 +41,4 @@ export const uploadConfig = multer({
 });
 
 // Middleware for multiple profile photos
-export const uploadProfilePhotos = uploadConfig.array('profilePhotos', 5); // Max 5 photos 
+export const uploadProfilePhotos = uploadConfig.array('photos', 5); // Max 5 photos 
