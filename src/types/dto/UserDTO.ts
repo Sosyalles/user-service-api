@@ -13,6 +13,7 @@ export interface UpdateUserDTO {
   firstName?: string;
   lastName?: string;
   isActive?: boolean;
+  profilePhoto?: string;
 }
 
 export interface UserResponseDTO {

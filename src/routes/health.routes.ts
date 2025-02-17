@@ -3,9 +3,8 @@ import { HealthController } from '../controllers/HealthController';
 import { HealthService } from '../services';
 
 const router = Router();
-const healthService = new HealthService();
-const healthController = new HealthController(healthService);
+const healthController = new HealthController();
 
-router.get('/', healthController.checkHealth);
+router.get('/', healthController.healthCheck);
 
 export default router; 

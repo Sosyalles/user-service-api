@@ -1,52 +1,48 @@
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../errors/AppError';
+import { 
+  AppError, 
+  ValidationError, 
+  AuthenticationError, 
+  ForbiddenError, 
+  NotFoundError, 
+  ConflictError, 
+  TooManyRequestsError, 
+  InternalServerError 
+} from '../errors/AppError';
 import logger from '../utils/logger';
 
 export const errorHandler = (
-  error: Error,
+  err: Error,
   req: Request,
   res: Response,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction
-) => {
-  if (error instanceof AppError) {
-    // Log operational errors
-    if (error.isOperational) {
-      logger.warn({
-        message: error.message,
-        stack: error.stack,
-        statusCode: error.statusCode,
-        path: req.path,
-        method: req.method,
-      });
-    } else {
-      // Log programming or other unhandled errors
-      logger.error({
-        message: error.message,
-        stack: error.stack,
-        path: req.path,
-        method: req.method,
-      });
-    }
-
-    return res.status(error.statusCode).json({
-      status: 'error',
-      message: error.message,
-      ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
-    });
-  }
-
-  // Handle unknown errors
-  logger.error({
-    message: error.message,
-    stack: error.stack,
-    path: req.path,
+): void => {
+  // Log the error
+  logger.error(`Error occurred: ${err.message}`, {
     method: req.method,
+    path: req.path,
+    body: req.body,
+    query: req.query,
+    user: req.user?.id
   });
 
-  return res.status(500).json({
+  // Handle specific error types
+  if (err instanceof AppError) {
+    res.status(err.statusCode).json({
+      status: 'error',
+      message: err.message,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+    return;
+  }
+
+  // Handle other unexpected errors
+  const status = 500;
+  const message = 'Beklenmeyen bir hata oluştu';
+
+  res.status(status).json({
     status: 'error',
-    message: 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+    message: process.env.NODE_ENV === 'development' ? err.message : message,
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 }; 

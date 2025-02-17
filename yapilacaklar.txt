@@ -1,4 +1,0 @@
-profile fotos eklicem user modele
-bio eklicem user modele
-google auth ekle
-mail ile parola sifirlama

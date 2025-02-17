@@ -21,10 +21,8 @@ export class UserDetailRepository {
         bio: data.bio,
         location: data.location,
         interests: data.interests,
-        instagramUrl: data.socialLinks?.instagram ? `https://instagram.com/${data.socialLinks.instagram}` : null,
-        twitterUrl: data.socialLinks?.twitter ? `https://twitter.com/${data.socialLinks.twitter}` : null,
-        linkedInUrl: data.socialLinks?.linkedin ? `https://linkedin.com/in/${data.socialLinks.linkedin}` : null,
-        facebookUrl: data.socialLinks?.facebook ? `https://facebook.com/${data.socialLinks.facebook}` : null
+        profilePhoto: data.profilePhoto,
+        profilePhotos: data.profilePhotos
       };
 
       return await UserDetail.create(createData);
@@ -45,10 +43,8 @@ export class UserDetailRepository {
         bio: data.bio,
         location: data.location,
         interests: data.interests,
-        instagramUrl: data.socialLinks?.instagram ? `https://instagram.com/${data.socialLinks.instagram}` : null,
-        twitterUrl: data.socialLinks?.twitter ? `https://twitter.com/${data.socialLinks.twitter}` : null,
-        linkedInUrl: data.socialLinks?.linkedin ? `https://linkedin.com/in/${data.socialLinks.linkedin}` : null,
-        facebookUrl: data.socialLinks?.facebook ? `https://facebook.com/${data.socialLinks.facebook}` : null
+        profilePhoto: data.profilePhoto,
+        profilePhotos: data.profilePhotos
       };
 
       await userDetail.update(updateData, { transaction });

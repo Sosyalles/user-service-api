@@ -13,7 +13,7 @@ const app = express();
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production'
         ? config.cors.origin
-        : ['http://localhost:5174', 'http://localhost:3000'],
+        : true, // Allow all origins in development
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
         'Content-Type',
@@ -41,10 +41,10 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve uploaded files statically with appropriate headers
-app.use('/uploads', (req, res, next) => {
+app.use('/uploads', (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const origin = process.env.NODE_ENV === 'production'
         ? config.cors.origin
-        : 'http://localhost:5174';
+        : req.headers.origin || '*'; // Use the request's origin or '*' in development
 
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -53,7 +53,8 @@ app.use('/uploads', (req, res, next) => {
     res.header('Cross-Origin-Resource-Policy', 'cross-origin');
 
     if (req.method === 'OPTIONS') {
-        return res.status(204).end();
+        res.status(204).end();
+        return;
     }
 
     next();

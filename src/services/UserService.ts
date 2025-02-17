@@ -61,7 +61,9 @@ export class UserService {
     await this.validateUniqueFields(userData.email, userData.username);
 
     const user = await this.userRepository.create(userData);
-    logger.info(`New user registered: ${user.id}`);
+    // Automatically create an associated UserDetail record for the new user
+    await UserDetail.create({ userId: user.id });
+    logger.info(`New user registered with UserDetail: ${user.id}`);
 
     const { password, ...userResponse } = user.toJSON() as UserResponseDTO & { password: string };
     return userResponse;
@@ -215,7 +217,8 @@ export class UserService {
         throw new NotFoundError('User not found');
       }
 
-      return user;
+      const { password, ...userData } = user.toJSON();
+      return userData;
     } catch (error) {
       logger.error('Error in getUserProfileWithDetails service:', error);
       throw error;
@@ -224,25 +227,49 @@ export class UserService {
 
   public async getUserProfileWithDetailsByUsername(username: string): Promise<any> {
     try {
-      const user = await User.findOne({
+      const user = await User.unscoped().findOne({
         where: { username },
         include: [{
           model: UserDetail,
           as: 'userDetail',
-          required: false
+          required: false,
+          attributes: ['bio', 'location', 'profilePhotos', 'lastLoginAt', 'interests']
         }],
-        attributes: { 
-          exclude: ['password'] // Güvenlik için password'ü hariç tutuyoruz
-        }
+        attributes: { exclude: ['password'] }
       });
 
       if (!user) {
         throw new NotFoundError('User not found');
       }
 
-      return user;
+      const result = user.toJSON() as any;
+      if (!result.userDetail) {
+        result.userDetail = {};
+      }
+      
+      // Ensure password is not included in the response
+      const { password, ...userDataWithoutPassword } = result;
+      return userDataWithoutPassword;
     } catch (error) {
       logger.error('Error in getUserProfileWithDetailsByUsername service:', error);
+      throw error;
+    }
+  }
+
+  public async updateProfilePhoto(userId: number, photoUrl: string): Promise<void> {
+    try {
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        throw new NotFoundError('User not found');
+      }
+
+      await this.userRepository.update(userId, {
+        profilePhoto: photoUrl
+      });
+
+      logger.info(`Profile photo updated for user: ${userId}`);
+    } catch (error) {
+      logger.error('Error updating profile photo:', error);
       throw error;
     }
   }

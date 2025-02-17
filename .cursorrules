@@ -1,6 +1,8 @@
 Generate a complete **Node.js** microservice for a **User Management Service** using **TypeScript** and **Sequelize** (with **PostgreSQL**) while adhering to **SOLID** principles (single responsibility). Provide a layered architecture, detailed logging, strict validation, rate limiting, JWT-based user authentication, and X-API-KEY for internal service communication. Separate dev and prod environments, handle robust error management, and include Dockerfiles, Docker Compose, and a README.
 
 dont use transformers npm packet
+dont write any migrations
+
 ### **Key Requirements**
 
 1. **TypeScript & SOLID Layered Architecture**

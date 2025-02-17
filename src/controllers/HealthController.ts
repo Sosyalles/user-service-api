@@ -1,21 +1,32 @@
-import { Request, Response } from 'express';
-import { HealthService, HealthStatus } from '../services';
+import { Request, Response, NextFunction } from 'express';
+import { sequelize } from '../config/database';
 import logger from '../utils/logger';
+import { 
+  InternalServerError 
+} from '../errors/AppError';
 
 export class HealthController {
-    private healthService: HealthService;
+  public healthCheck = async (
+    req: Request, 
+    res: Response, 
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      // Check database connection
+      await sequelize.authenticate();
 
-    constructor(healthService: HealthService) {
-        this.healthService = healthService;
-    }
-
-    public checkHealth = async (req: Request, res: Response): Promise<void> => {
-        try {
-            const status = await this.healthService.checkHealth();
-            res.status(200).json(status);
-        } catch (error) {
-            logger.error('Health check failed:', error);
-            res.status(503).json({ status: 'unhealthy', message: 'Service is not available' });
+      logger.info('Sağlık kontrolü başarılı');
+      res.json({
+        status: 'success',
+        message: 'Servis sağlıklı ve çalışıyor',
+        data: {
+          database: 'Bağlantı başarılı',
+          timestamp: new Date().toISOString()
         }
-    };
+      });
+    } catch (error) {
+      logger.error('Sağlık kontrolü başarısız:', error);
+      throw new InternalServerError('Veritabanı bağlantısı kurulamadı');
+    }
+  };
 } 

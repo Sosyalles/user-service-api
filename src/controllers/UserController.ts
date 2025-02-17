@@ -1,9 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserService } from '../services/UserService';
 import logger from '../utils/logger';
-import { ValidationError, ForbiddenError } from '../errors/AppError';
-import { CreateUserDTO, UpdateUserDTO, ChangePasswordDTO } from '../types/dto/UserDTO';
+import { 
+  AuthenticationError, 
+  ForbiddenError, 
+  NotFoundError 
+} from '../errors/AppError';
+import { 
+  CreateUserDTO, 
+  UpdateUserDTO, 
+  ChangePasswordDTO 
+} from '../types/dto/UserDTO';
 import { uploadProfilePhotos } from '../utils/multerConfig';
+import { ValidationError } from '../errors/AppError';
 
 export class UserController {
   private userService: UserService;
@@ -18,26 +27,24 @@ export class UserController {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const userData = req.body as CreateUserDTO;
-      
-      // Additional validation for required fields
-      if (!userData.email || !userData.password || !userData.username) {
-        throw new ValidationError('Email, password, and username are required');
-      }
+      const userData: CreateUserDTO = {
+        username: req.body.username,
+        email: req.body.email,
+        password: req.body.password,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName
+      };
 
-      const user = await this.userService.register(userData);
-      if (!user) {
-        throw new Error('Failed to create user');
-      }
+      const newUser = await this.userService.register(userData);
 
-      logger.info(`User registered successfully with email: ${userData.email}`);
+      logger.info(`Kullanıcı başarıyla kayıt edildi: ${newUser.username}`);
       res.status(201).json({
         status: 'success',
-        message: 'User registered successfully',
-        data: user,
+        message: 'Kullanıcı başarıyla kayıt edildi',
+        data: newUser
       });
     } catch (error) {
-      logger.error('Error in register controller:', error);
+      logger.error('Kullanıcı kayıt işleminde hata:', error);
       next(error);
     }
   };
@@ -50,59 +57,20 @@ export class UserController {
     try {
       const { email, password } = req.body;
 
-      // Additional validation
       if (!email || !password) {
-        throw new ValidationError('Email and password are required');
+        throw new ValidationError('E-posta ve şifre gereklidir');
       }
 
-      const loginResponse = await this.userService.login({ email, password });
-      if (!loginResponse || !loginResponse.token) {
-        throw new Error('Login failed - invalid response');
-      }
+      const { user, token } = await this.userService.login({email, password});
 
-      logger.info(`User logged in successfully: ${email}`);
+      logger.info(`Kullanıcı giriş yaptı: ${user.username}`);
       res.json({
         status: 'success',
-        message: 'Login successful',
-        data: loginResponse,
+        message: 'Giriş başarılı',
+        data: { user, token }
       });
     } catch (error) {
-      logger.error('Error in login controller:', error);
-      next(error);
-    }
-  };
-
-  public updateUser = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        throw new ValidationError('User ID is required');
-      }
-
-      const updateData = req.body as UpdateUserDTO;
-      
-      // Validate update data
-      if (Object.keys(updateData).length === 0) {
-        throw new ValidationError('No update data provided');
-      }
-
-      const updatedUser = await this.userService.updateUser(userId, updateData);
-      if (!updatedUser) {
-        throw new Error('Failed to update user');
-      }
-
-      logger.info(`User updated successfully: ${userId}`);
-      res.json({
-        status: 'success',
-        message: 'User updated successfully',
-        data: updatedUser,
-      });
-    } catch (error) {
-      logger.error('Error in updateUser controller:', error);
+      logger.error('Kullanıcı giriş işleminde hata:', error);
       next(error);
     }
   };
@@ -115,29 +83,24 @@ export class UserController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new ValidationError('User ID is required');
+        throw new AuthenticationError('Kullanıcı kimliği gereklidir');
       }
 
-      const passwordData = req.body as ChangePasswordDTO;
-      
-      // Validate password data
-      if (!passwordData.currentPassword || !passwordData.newPassword) {
-        throw new ValidationError('Current password and new password are required');
-      }
-
-      if (passwordData.currentPassword === passwordData.newPassword) {
-        throw new ValidationError('New password must be different from current password');
-      }
+      const { currentPassword, newPassword } = req.body;
+      const passwordData: ChangePasswordDTO = { 
+        currentPassword, 
+        newPassword 
+      };
 
       await this.userService.changePassword(userId, passwordData);
 
-      logger.info(`Password changed successfully for user: ${userId}`);
-      res.status(200).json({
+      logger.info(`Şifre başarıyla değiştirildi: ${userId}`);
+      res.json({
         status: 'success',
-        message: 'Password changed successfully',
+        message: 'Şifre başarıyla değiştirildi'
       });
     } catch (error) {
-      logger.error('Error in changePassword controller:', error);
+      logger.error('Şifre değişikliği sırasında hata:', error);
       next(error);
     }
   };
@@ -150,27 +113,24 @@ export class UserController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new ValidationError('User ID is required');
+        throw new AuthenticationError('Kullanıcı kimliği gereklidir');
       }
 
       const user = await this.userService.getUser(userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      logger.info(`Profile retrieved successfully for user: ${userId}`);
+      
+      logger.info(`Kullanıcı profili getirildi: ${userId}`);
       res.json({
         status: 'success',
-        message: 'Profile retrieved successfully',
-        data: user,
+        message: 'Kullanıcı profili başarıyla getirildi',
+        data: user
       });
     } catch (error) {
-      logger.error('Error in getProfile controller:', error);
+      logger.error('Kullanıcı profili getirilirken hata:', error);
       next(error);
     }
   };
 
-  public deleteUser = async (
+  public updateUser = async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -178,97 +138,37 @@ export class UserController {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        throw new ValidationError('User ID is required');
+        throw new AuthenticationError('Kullanıcı kimliği gereklidir');
       }
 
-      await this.userService.deleteUser(userId);
+      const updateData: UpdateUserDTO = {
+        username: req.body.username,
+        email: req.body.email,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        profilePhoto: req.body.profilePhoto
+      };
 
-      logger.info(`User deleted successfully: ${userId}`);
-      res.status(200).json({
-        status: 'success',
-        message: 'User deleted successfully',
-      });
-    } catch (error) {
-      logger.error('Error in deleteUser controller:', error);
-      next(error);
-    }
-  };
+      // Remove undefined properties
+      Object.keys(updateData).forEach(key => 
+        updateData[key as keyof UpdateUserDTO] === undefined && 
+        delete updateData[key as keyof UpdateUserDTO]
+      );
 
-  public getAllUsers = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      // Validate and parse query parameters
-      const page = req.query.page ? parseInt(req.query.page as string, 10) : undefined;
-      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
-      const search = req.query.search as string | undefined;
-
-      // Validate pagination parameters
-      if (page !== undefined && page < 1) {
-        throw new ValidationError('Page number must be greater than 0');
-      }
-      if (limit !== undefined && (limit < 1 || limit > 100)) {
-        throw new ValidationError('Limit must be between 1 and 100');
+      if (Object.keys(updateData).length === 0) {
+        throw new ValidationError('Güncelleme için veri sağlanmadı');
       }
 
-      const result = await this.userService.getAllUsers(page, limit, search);
-      if (!result || !result.users) {
-        throw new Error('Failed to fetch users');
-      }
+      const updatedUser = await this.userService.updateUser(userId, updateData);
 
-      logger.info(`Retrieved ${result.users.length} users successfully`);
+      logger.info(`Kullanıcı profili güncellendi: ${userId}`);
       res.json({
         status: 'success',
-        message: 'Users retrieved successfully',
-        data: {
-          users: result.users,
-          total: result.total,
-          page: page || 1,
-          limit: limit || 10,
-          totalPages: Math.ceil(result.total / (limit || 10)),
-        },
+        message: 'Kullanıcı profili başarıyla güncellendi',
+        data: updatedUser
       });
     } catch (error) {
-      logger.error('Error in getAllUsers controller:', error);
-      next(error);
-    }
-  };
-
-  public updateProfilePhotos = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        throw new ValidationError('User ID is required');
-      }
-
-      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-        throw new ValidationError('No profile photos uploaded');
-      }
-
-      const files = req.files as Express.Multer.File[];
-      const photoUrls = files.map(file => `/uploads/profiles/${file.filename}`);
-
-      const updatedUser = await this.userService.updateProfilePhotos(userId, photoUrls);
-      if (!updatedUser) {
-        throw new Error('Failed to update profile photos');
-      }
-
-      logger.info(`Profile photos updated successfully for user: ${userId}`);
-      res.json({
-        status: 'success',
-        message: 'Profile photos updated successfully',
-        data: {
-          profilePhoto: updatedUser.profilePhoto
-        },
-      });
-    } catch (error) {
-      logger.error('Error in updateProfilePhotos controller:', error);
+      logger.error('Kullanıcı profili güncellenirken hata:', error);
       next(error);
     }
   };
@@ -280,13 +180,21 @@ export class UserController {
   ): Promise<void> => {
     try {
       const userId = parseInt(req.params.id);
+      
+      if (isNaN(userId)) {
+        throw new ValidationError('Geçersiz kullanıcı kimliği');
+      }
+
       const user = await this.userService.getUser(userId);
       
+      logger.info(`Kullanıcı kimliğine göre kullanıcı getirildi: ${userId}`);
       res.json({
         status: 'success',
+        message: 'Kullanıcı başarıyla getirildi',
         data: user
       });
     } catch (error) {
+      logger.error('Kullanıcı kimliğine göre getirme işleminde hata:', error);
       next(error);
     }
   };
@@ -298,56 +206,63 @@ export class UserController {
   ): Promise<void> => {
     try {
       const { username } = req.params;
-      const user = await this.userService.getUserByUsername(username);
       
-      res.json({
-        status: 'success',
-        data: user
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public getUserByEmail = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const { email } = req.params;
-      const user = await this.userService.getUserByEmail(email);
-      
-      res.json({
-        status: 'success',
-        data: user
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public getProfileWithDetails = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        throw new ValidationError('User ID is required');
+      if (!username) {
+        throw new ValidationError('Kullanıcı adı gereklidir');
       }
 
-      const userProfile = await this.userService.getUserProfileWithDetails(userId);
+      const user = await this.userService.getUserByUsername(username);
       
-      logger.info(`User profile with details retrieved successfully for user: ${userId}`);
+      logger.info(`Kullanıcı adına göre kullanıcı getirildi: ${username}`);
       res.json({
         status: 'success',
-        message: 'User profile with details retrieved successfully',
-        data: userProfile,
+        message: 'Kullanıcı başarıyla getirildi',
+        data: user
       });
     } catch (error) {
-      logger.error('Error in getProfileWithDetails controller:', error);
+      logger.error('Kullanıcı adına göre getirme işleminde hata:', error);
+      next(error);
+    }
+  };
+
+  public getAllUsers = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string;
+
+      if (page < 1) {
+        throw new ValidationError('Sayfa numarası 1\'den küçük olamaz');
+      }
+
+      if (limit < 1 || limit > 100) {
+        throw new ValidationError('Limit 1 ile 100 arasında olmalıdır');
+      }
+
+      const { users, total } = await this.userService.getAllUsers(
+        page, 
+        limit, 
+        search
+      );
+      
+      logger.info(`Kullanıcılar getirildi: Sayfa ${page}`);
+      res.json({
+        status: 'success',
+        message: 'Kullanıcılar başarıyla getirildi',
+        data: {
+          users,
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
+    } catch (error) {
+      logger.error('Kullanıcıları getirme işleminde hata:', error);
       next(error);
     }
   };
@@ -359,20 +274,47 @@ export class UserController {
   ): Promise<void> => {
     try {
       const { username } = req.params;
+      
       if (!username) {
-        throw new ValidationError('Username is required');
+        throw new ValidationError('Kullanıcı adı gereklidir');
       }
 
       const userProfile = await this.userService.getUserProfileWithDetailsByUsername(username);
       
-      logger.info(`User profile with details retrieved successfully for username: ${username}`);
+      logger.info(`Kullanıcı profili detayları getirildi: ${username}`);
       res.json({
         status: 'success',
-        message: 'User profile with details retrieved successfully',
-        data: userProfile,
+        message: 'Kullanıcı profili detayları başarıyla getirildi',
+        data: userProfile
       });
     } catch (error) {
-      logger.error('Error in getProfileWithDetailsByUsername controller:', error);
+      logger.error('Kullanıcı profili detayları getirilirken hata:', error);
+      next(error);
+    }
+  };
+
+  public getUserByEmail = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const { email } = req.params;
+      
+      if (!email) {
+        throw new ValidationError('E-posta adresi gereklidir');
+      }
+
+      const user = await this.userService.getUserByEmail(email);
+      
+      logger.info(`E-posta adresine göre kullanıcı getirildi: ${email}`);
+      res.json({
+        status: 'success',
+        message: 'Kullanıcı başarıyla getirildi',
+        data: user
+      });
+    } catch (error) {
+      logger.error('E-posta adresine göre getirme işleminde hata:', error);
       next(error);
     }
   };

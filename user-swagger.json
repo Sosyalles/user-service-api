@@ -1,0 +1,865 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "User Management Service API",
+    "description": "A comprehensive User Management Service with JWT Authentication and Internal Service Communication",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support",
+      "email": "support@example.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User registration, login, and authentication operations"
+    },
+    {
+      "name": "Profile",
+      "description": "User profile management operations"
+    },
+    {
+      "name": "User Details",
+      "description": "User additional details management"
+    },
+    {
+      "name": "Internal",
+      "description": "Internal service communication endpoints"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new user",
+        "description": "Create a new user account with provided details",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUserDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User login",
+        "description": "Authenticate user and generate JWT token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "Get current user profile",
+        "description": "Retrieve the profile of the authenticated user",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Profile retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUserDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Profile"],
+        "summary": "Update user profile",
+        "description": "Update the profile of the authenticated user",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUserDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/detail": {
+      "get": {
+        "tags": ["User Details"],
+        "summary": "Get user details",
+        "description": "Retrieve additional details for the authenticated user",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "User details retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUserDetailDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["User Details"],
+        "summary": "Update user details",
+        "description": "Update additional details for the authenticated user",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDetailDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User details updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUserDetailDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/profile/photos": {
+      "post": {
+        "tags": ["Profile"],
+        "summary": "Upload profile photos",
+        "description": "Upload one or more profile photos for the authenticated user",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "photos": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    },
+                    "maxItems": 5,
+                    "description": "Array of image files (max 5, 2MB each, JPEG/PNG only)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Photos uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfilePhotosUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid file format or size",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Profile"],
+        "summary": "Delete profile photos",
+        "description": "Delete specific profile photos for the authenticated user",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "photoUrls": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "description": "Array of photo URLs to delete"
+                  }
+                },
+                "required": ["photoUrls"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Photos deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Profile photos deleted successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "deletedPhotos": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Geçersiz fotoğraf URL'leri veya doğrulama hatası",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Yetkisiz erişim - Kimlik doğrulama başarısız",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Yasaklanmış - Yeterli izinler yok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Kaynak bulunamadı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Çok fazla istek - Hız sınırı aşıldı",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Sunucu hatası",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Change user password",
+        "description": "Change the password for the authenticated user",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password changed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "Get all users",
+        "description": "Retrieve a paginated list of users",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Users retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {"type": "string"},
+                    "message": {"type": "string"},
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/UserResponseDTO"
+                          }
+                        },
+                        "total": {"type": "integer"},
+                        "page": {"type": "integer"},
+                        "limit": {"type": "integer"},
+                        "totalPages": {"type": "integer"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/users/{id}": {
+      "get": {
+        "tags": ["Internal"],
+        "summary": "Get user by ID (Internal Service)",
+        "description": "Retrieve a user by their ID for internal service communication",
+        "security": [{"apiKeyAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUserDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Invalid API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/internal/users/username/{username}": {
+      "get": {
+        "tags": ["Internal"],
+        "summary": "Get user by username (Internal Service)",
+        "description": "Retrieve a user by their username for internal service communication",
+        "security": [{"apiKeyAuth": []}],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponseUserDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Invalid API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY"
+      }
+    },
+    "schemas": {
+      "CreateUserDTO": {
+        "type": "object",
+        "required": ["username", "email", "password", "firstName", "lastName"],
+        "properties": {
+          "username": {"type": "string"},
+          "email": {"type": "string", "format": "email"},
+          "password": {"type": "string", "minLength": 8},
+          "firstName": {"type": "string"},
+          "lastName": {"type": "string"}
+        }
+      },
+      "UpdateUserDTO": {
+        "type": "object",
+        "properties": {
+          "username": {"type": "string"},
+          "email": {"type": "string", "format": "email"},
+          "password": {"type": "string", "minLength": 8},
+          "firstName": {"type": "string"},
+          "lastName": {"type": "string"},
+          "isActive": {"type": "boolean"},
+          "profilePhoto": {"type": "string"}
+        }
+      },
+      "UserResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "username": {"type": "string"},
+          "email": {"type": "string", "format": "email"},
+          "firstName": {"type": "string"},
+          "lastName": {"type": "string"},
+          "isActive": {"type": "boolean"},
+          "lastLoginAt": {"type": "string", "format": "date-time"},
+          "createdAt": {"type": "string", "format": "date-time"},
+          "updatedAt": {"type": "string", "format": "date-time"}
+        }
+      },
+      "LoginRequestDTO": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {"type": "string", "format": "email"},
+          "password": {"type": "string"}
+        }
+      },
+      "LoginResponseDTO": {
+        "type": "object",
+        "properties": {
+          "token": {"type": "string"},
+          "user": {"$ref": "#/components/schemas/UserResponseDTO"}
+        }
+      },
+      "ChangePasswordDTO": {
+        "type": "object",
+        "required": ["currentPassword", "newPassword"],
+        "properties": {
+          "currentPassword": {"type": "string"},
+          "newPassword": {"type": "string", "minLength": 8}
+        }
+      },
+      "NotificationPreferencesDTO": {
+        "type": "object",
+        "properties": {
+          "emailNotifications": {"type": "boolean"},
+          "pushNotifications": {"type": "boolean"},
+          "weeklyRecommendations": {"type": "boolean"}
+        }
+      },
+      "UpdateUserDetailDTO": {
+        "type": "object",
+        "properties": {
+          "bio": {"type": "string"},
+          "location": {"type": "string"},
+          "profilePhoto": {"type": "string"},
+          "profilePhotos": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "interests": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "notificationPreferences": {
+            "$ref": "#/components/schemas/NotificationPreferencesDTO"
+          }
+        }
+      },
+      "UserDetailResponseDTO": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "integer"},
+          "userId": {"type": "integer"},
+          "bio": {"type": "string"},
+          "location": {"type": "string"},
+          "profilePhoto": {"type": "string"},
+          "profilePhotos": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "interests": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "notificationPreferences": {
+            "$ref": "#/components/schemas/NotificationPreferencesDTO"
+          },
+          "lastLoginAt": {"type": "string", "format": "date-time"},
+          "createdAt": {"type": "string", "format": "date-time"},
+          "updatedAt": {"type": "string", "format": "date-time"}
+        }
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "message": {"type": "string"}
+        }
+      },
+      "ApiResponseUserDTO": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "message": {"type": "string"},
+          "data": {"$ref": "#/components/schemas/UserResponseDTO"}
+        }
+      },
+      "ApiResponseUserDetailDTO": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "message": {"type": "string"},
+          "data": {"$ref": "#/components/schemas/UserDetailResponseDTO"}
+        }
+      },
+      "ApiResponseProfilePhotos": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "message": {"type": "string"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "profilePhoto": {"type": "string"}
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string", 
+            "enum": ["error"],
+            "example": "error"
+          },
+          "message": {
+            "type": "string",
+            "description": "Detaylı hata mesajı"
+          },
+          "stack": {
+            "type": "string",
+            "description": "Geliştirme ortamında hata yığını detayları",
+            "nullable": true
+          }
+        },
+        "required": ["status", "message"]
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "allOf": [
+          {"$ref": "#/components/schemas/ErrorResponse"},
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string", 
+                "enum": ["error"],
+                "example": "error"
+              },
+              "message": {
+                "type": "string",
+                "description": "Doğrulama hatası detayları",
+                "example": "Girilen veriler geçersiz"
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field": {"type": "string"},
+                    "message": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "ProfilePhotosUploadResponse": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"},
+          "message": {"type": "string"},
+          "data": {
+            "type": "object",
+            "properties": {
+              "profilePhoto": {"type": "string"}
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "example": "error"},
+          "message": {"type": "string"}
+        }
+      }
+    }
+  }
+} 

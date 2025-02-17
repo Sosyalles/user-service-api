@@ -1,10 +1,3 @@
-export interface SocialLinksDTO {
-  instagram?: string | null;
-  twitter?: string | null;
-  linkedin?: string | null;
-  facebook?: string | null;
-}
-
 export interface NotificationPreferencesDTO {
   emailNotifications: boolean;
   pushNotifications: boolean;
@@ -16,7 +9,6 @@ export interface UpdateUserDetailDTO {
   location?: string;
   profilePhoto?: string;
   profilePhotos?: string[];
-  socialLinks?: SocialLinksDTO;
   interests?: string[];
   notificationPreferences?: NotificationPreferencesDTO;
 }
@@ -26,9 +18,11 @@ export interface UserDetailResponseDTO {
   userId: number;
   bio: string | null;
   location: string | null;
+  profilePhoto: string | null;
+  profilePhotos: string[];
   interests: string[];
-  socialLinks: SocialLinksDTO;
   notificationPreferences: NotificationPreferencesDTO;
+  lastLoginAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 } 
