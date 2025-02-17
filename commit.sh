@@ -37,7 +37,7 @@ commit_changes() {
     git commit -m "chore: Various project updates and fixes" || true
 
     # Push changes
-    git push origin main || git push origin master
+    git push origin dev_eren || git push origin master
 }
 
 # Main script execution
